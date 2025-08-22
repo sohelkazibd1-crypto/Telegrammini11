@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary-color: #0088cc;
+            --secondary-color: #f1f1f1;
+            --text-color: #333;
+            --bg-color: #fff;
+            --card-bg: #f9f9f9;
+            --border-color: #ddd;
+        }
+
+        .dark-mode {
+            --primary-color: #0088cc;
+            --secondary-color: #2d2d2d;
+            --text-color: #f1f1f1;
+            --bg-color: #1e1e1e;
+            --card-bg: #2d2d2d;
+            --border-color: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 15px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+
+        .theme-toggle button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .balance-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .balance-card, .referral-card {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navigation {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 15px;
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .content-view {
+            display: none;
+        }
+
+        .content-view.active {
+            display: block;
+        }
+
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: var(--secondary-color);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-actions button {
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .method {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .method.selected {
+            border-color: var(--primary-color);
+        }
+
+        .method img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .transaction-form {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .transaction-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        #submit-transaction {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .transaction-history table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transaction-history th, .transaction-history td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-form {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-upload {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        #profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        #save-profile {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .theme-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .theme-option {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .theme-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin: 0 auto 10px;
+            border: 2px solid var(--border-color);
+        }
+
+        .default-theme {
+            background: linear-gradient(135deg, #0088cc, #00aaff);
+        }
+
+        .blue-theme {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .green-theme {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+
+        .premium-theme {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .balance-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .status-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .theme-selection {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="profile-section">
+                <img id="user-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDg4Y2MiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMjAgMjF2LTJhNCA0IDAgMCAwLTQtNEg4YTQgNCAwIDAgMC00IDR2MiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCIvPjwvc3ZnPg==" alt="User Avatar">
+                <div>
+                    <h2 id="user-name">Telegram User</h2>
+                    <p id="user-level">Level: 0</p>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <button id="theme-switcher">ডার্ক মোড</button>
+            </div>
+        </header>
+
+        <section class="balance-section">
+            <div class="balance-card">
+                <h3>আপনার ব্যালেন্স</h3>
+                <p id="user-balance">0.00 BDT</p>
+            </div>
+            <div class="referral-card">
+                <h3>রেফারেল লিংক</h3>
+                <p id="referral-link">লোড হচ্ছে...</p>
+                <button id="copy-referral">কপি করুন</button>
+            </div>
+        </section>
+
+        <nav class="navigation">
+            <button class="nav-btn active" data-target="dashboard">ড্যাশবোর্ড</button>
+            <button class="nav-btn" data-target="wallet">ওয়ালেট</button>
+            <button class="nav-btn" data-target="profile">প্রোফাইল</button>
+            <button class="nav-btn" data-target="notifications">নোটিফিকেশন</button>
+            <button class="nav-btn" data-target="activity">এক্টিভিটি লগ</button>
+        </nav>
+
+        <main class="main-content">
+            <div id="dashboard-view" class="content-view active">
+                <h3>সিস্টেম স্ট্যাটাস</h3>
+                <div class="status-cards">
+                    <div class="status-card">টোটাল ডিপোজিট: <span>0 BDT</span></div>
+                    <div class="status-card">টোটাল উইথড্র: <span>0 BDT</span></div>
+                    <div class="status-card">রেফারেল ইনকাম: <span>0 BDT</span></div>
+                </div>
+                
+                <h3>লেভেল সিস্টেম</h3>
+                <div class="level-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 20%;"></div>
+                    </div>
+                    <p>লেভেল 1 এর জন্য 100 পয়েন্ট প্রয়োজন</p>
+                </div>
+                
+                <div class="quick-actions">
+                    <button id="deposit-btn">ডিপোজিট</button>
+                    <button id="withdraw-btn">উইথড্র</button>
+                    <button id="upgrade-btn">লেভেল আপগ্রেড</button>
+                </div>
+            </div>
+
+            <div id="wallet-view" class="content-view">
+                <h3>পেমেন্ট মেথড</h3>
+                <div class="payment-methods">
+                    <div class="method selected" data-method="bkash">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlNjAwNjUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMmwxMCAxMC00IDEwLTItMS0zLTMtMyAzLTItMS00LTEwWiIvPjwvc3ZnPg==" alt="bKash">
+                        <p>bKash</p>
+                    </div>
+                    <div class="method" data-method="nagad">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDdiMzYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIjIiBjeT0iMTIiIHI9IjEwIi8+PHBhdGggZD0iTTggMTJoOCIvPjwvc3ZnPg==" alt="Nagad">
+                        <p>Nagad</p>
+                    </div>
+                    <div class="method" data-method="rocket">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDg4Y2MiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNCAxNWw2LTYiLz48cGF0aCBkPSJNMTAgOUw0IDE1Ii8+PHBhdGggZD0iTTIwIDRsLTYgNiIvPjxwYXRoIGQ9Ik0xNCAxMGw2LTYiLz48L3N2Zz4=" alt="Rocket">
+                        <p>Rocket</p>
+                    </div>
+                    <div class="method" data-method="crypto">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmQ3MDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik0xNS40IDlBNyA3IDAgMCAwIDkgMTUuNCIvPjxwYXRoIGQ9Ik05IDE1LjRBNyA3IDAgMCAwIDE1LjQgOSIvPjwvc3ZnPg==" alt="Crypto">
+                        <p>Crypto</p>
+                    </div>
+                </div>
+                
+                <div class="transaction-form">
+                    <h4 id="transaction-type">ডিপোজিট</h4>
+                    <input type="number" id="amount" placeholder="টাকার পরিমাণ">
+                    <input type="text" id="transaction-id" placeholder="ট্রানজেকশন আইডি">
+                    <button id="submit-transaction">সাবমিট করুন</button>
+                </div>
+                
+                <h3>ট্রানজেকশন হিস্ট্রি</h3>
+                <div class="transaction-history">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>তারিখ</th>
+                                <th>টাইপ</th>
+                                <th>পরিমাণ</th>
+                                <th>স্ট্যাটাস</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-list">
+                            <tr>
+                                <td colspan="4" style="text-align: center;">কোন ট্রানজেকশন নেই</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="profile-view" class="content-view">
+                <h3>প্রোফাইল এডিট</h3>
+                <div class="profile-form">
+                    <div class="avatar-upload">
+                        <img id="profile-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwODhjYyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMCAyMXYtMmE0IDQgMCAwIDAtNC00SDhhNCA0IDAgMCAwLTQgNHYyIi8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0Ii8+PC9zdmc+" alt="Profile Avatar">
+                        <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+                        <label for="avatar-input" style="display: inline-block; padding: 8px 15px; background-color: var(--primary-color); color: white; border-radius: 5px; cursor: pointer; margin-top: 10px;">ছবি পরিবর্তন</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-name">নাম</label>
+                        <input type="text" id="profile-name" placeholder="আপনার নাম">
+                    </div>
+                    <button id="save-profile">সেভ করুন</button>
+                </div>
+                
+                <h3>থিম সিলেকশন</h3>
+                <div class="theme-selection">
+                    <div class="theme-option" data-theme="default">
+                        <div class="theme-preview default-theme"></div>
+                        <p>ডিফল্ট</p>
+                    </div>
+                    <div class="theme-option" data-theme="blue">
+                        <div class="theme-preview blue-theme"></div>
+                        <p>ব্লু</p>
+                    </div>
+                    <div class="theme-option" data-theme="green">
+                        <div class="theme-preview green-theme"></div>
+                        <p>গ্রিন</p>
+                    </div>
+                    <div class="theme-option" data-theme="premium" data-required-level="3">
+                        <div class="theme-preview premium-theme"></div>
+                        <p>প্রিমিয়াম</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="notifications-view" class="content-view">
+                <h3>ইনবক্স</h3>
+                <div class="notification-list">
+                    <div style="padding: 15px; text-align: center; color: #888;">
+                        কোন নোটিফিকেশন নেই
+                    </div>
+                </div>
+            </div>
+
+            <div id="activity-view" class="content-view">
+                <h3>এক্টিভিটি লগ</h3>
+                <div class="activity-filters">
+                    <select id="activity-type" style="padding: 8px; margin-right: 10px; background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 5px;">
+                        <option value="all">সব এক্টিভিটি</option>
+                        <option value="login">লগইন</option>
+                        <option value="deposit">ডিপোজিট</option>
+                        <option value="withdraw">উইথড্র</option>
+                        <option value="upgrade">লেভেল আপগ্রেড</option>
+                    </select>
+                    <input type="date" id="activity-date" style="padding: 8px; background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 5px;">
+                </div>
+                <div class="activity-list" style="margin-top: 20px;">
+                    <div style="padding: 15px; text-align: center; color: #888;">
+                        কোন এক্টিভিটি লগ নেই
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body">
+                <h3 style="margin-bottom: 15px;">ডিপোজিট</h3>
+                <p style="margin-bottom: 15px;">bKash: 01XXXXXXXXX</p>
+                <p style="margin-bottom: 15px;">টাকা পাঠানোর পর ট্রানজেকশন আইডি দিন</p>
+                <input type="number" placeholder="টাকার পরিমাণ" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                <input type="text" placeholder="ট্রানজেকশন আইডি" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 5px;">
+                <button style="width: 100%; padding: 10px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">সাবমিট করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Telegram WebApp initialization
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+            
+            // Get user data from Telegram
+            const user = tg.initDataUnsafe.user;
+            if (user) {
+                document.getElementById('user-name').textContent = user.first_name + ' ' + (user.last_name || '');
+                document.getElementById('profile-name').value = user.first_name + ' ' + (user.last_name || '');
+                
+                if (user.photo_url) {
+                    document.getElementById('user-avatar').src = user.photo_url;
+                    document.getElementById('profile-avatar').src = user.photo_url;
+                }
+            }
+            
+            // Generate referral link
+            const referralCode = generateReferralCode();
+            document.getElementById('referral-link').textContent = window.location.href + '?ref=' + referralCode;
+            
+            // Theme switcher
+            const themeSwitcher = document.getElementById('theme-switcher');
+            themeSwitcher.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                themeSwitcher.textContent = document.body.classList.contains('dark-mode') ? 'লাইট মোড' : 'ডার্ক মোড';
+            });
+            
+            // Navigation
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const target = this.getAttribute('data-target');
+                    document.querySelectorAll('.content-view').forEach(view => {
+                        view.classList.remove('active');
+                    });
+                    document.getElementById(target + '-view').classList.add('active');
+                });
+            });
+            
+            // Copy referral link
+            document.getElementById('copy-referral').addEventListener('click', function() {
+                const referralLink = document.getElementById('referral-link').textContent;
+                navigator.clipboard.writeText(referralLink).then(() => {
+                    alert('রেফারেল লিংক কপি করা হয়েছে!');
+                });
+            });
+            
+            // Payment method selection
+            const paymentMethods = document.querySelectorAll('.method');
+            paymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    paymentMethods.forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+            
+            // Deposit/Withdraw buttons
+            const depositBtn = document.getElementById('deposit-btn');
+            const withdrawBtn = document.getElementById('withdraw-btn');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close');
+            
+            depositBtn.addEventListener('click', function() {
+                document.getElementById('modal-body').innerHTML = `
+                    <h3 style="margin-bottom: 15px;">ডিপোজিট</h3>
+                    <p style="margin-bottom: 15px;">bKash: 01XXXXXXXXX</p>
+                    <p style="margin-bottom: 15px;">টাকা পাঠানোর পর ট্রানজেকশন আইডি দিন</p>
+                    <input type="number" id="modal-amount" placeholder="টাকার পরিমাণ" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <input type="text" id="modal-transaction-id" placeholder="ট্রানজেকশন আইডি" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <button id="modal-submit" style="width: 100%; padding: 10px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">সাবমিট করুন</button>
+                `;
+                modal.style.display = 'flex';
+                
+                document.getElementById('modal-submit').addEventListener('click', function() {
+                    const amount = document.getElementById('modal-amount').value;
+                    const transactionId = document.getElementById('modal-transaction-id').value;
+                    
+                    if (amount && transactionId) {
+                        alert('ডিপোজিট রিকোয়েস্ট সাবমিট হয়েছে!');
+                        modal.style.display = 'none';
+                    } else {
+                        alert('দয়া করে সব তথ্য প্রদান করুন');
+                    }
+                });
+            });
+            
+            withdrawBtn.addEventListener('click', function() {
+                document.getElementById('modal-body').innerHTML = `
+                    <h3 style="margin-bottom: 15px;">উইথড্র</h3>
+                    <input type="number" id="modal-amount" placeholder="টাকার পরিমাণ" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <input type="text" id="modal-account" placeholder="আপনার bKash/নগদ নম্বর" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <button id="modal-submit" style="width: 100%; padding: 10px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">সাবমিট করুন</button>
+                `;
+                modal.style.display = 'flex';
+                
+                document.getElementById('modal-submit').addEventListener('click', function() {
+                    const amount = document.getElementById('modal-amount').value;
+                    const account = document.getElementById('modal-account').value;
+                    
+                    if (amount && account) {
+                        alert('উইথড্র রিকোয়েস্ট সাবমিট হয়েছে!');
+                        modal.style.display = 'none';
+                    } else {
+                        alert('দয়া করে সব তথ্য প্রদান করুন');
+                    }
+                });
+            });
+            
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Theme selection
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const requiredLevel = this.getAttribute('data-required-level');
+                    if (requiredLevel && parseInt(requiredLevel) > 0) {
+                        alert(`এই থিম আনলক করতে লেভেল ${requiredLevel} প্রয়োজন`);
+                    } else {
+                        themeOptions.forEach(opt => opt.style.opacity = '1');
+                        this.style.opacity = '0.7';
+                        // Apply theme logic here
+                    }
+                });
+            });
+            
+            // Avatar upload
+            document.getElementById('avatar-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('profile-avatar').src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Save profile
+            document.getElementById('save-profile').addEventListener('click', function() {
+                const name = document.getElementById('profile-name').value;
+                if (name) {
+                    document.getElementById('user-name').textContent = name;
+                    alert('প্রোফাইল সেভ করা হয়েছে!');
+                } else {
+                    alert('দয়া করে নাম প্রদান করুন');
+                }
+            });
+            
+            // Helper function to generate referral code
+            function generateReferralCode() {
+                return Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+        });
+    </script>
+</body>
+</html>
